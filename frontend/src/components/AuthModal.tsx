@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Lock, Mail, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface AuthModalProps {
@@ -29,6 +29,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [localError, setLocalError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -73,36 +82,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-auth-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-xs"
     >
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h2 id="modal-auth-title" className="text-base font-bold text-slate-900">
+      <div className="w-full max-w-md rounded-2xl border jg-surface p-6 shadow-2xl">
+        <div className="flex items-center justify-between border-b jg-border pb-3">
+          <h2 id="modal-auth-title" className="text-base font-bold jg-text">
             {mode === 'signin' ? 'Sign In' : 'Create Account'}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-lg p-1 jg-text-muted hover:opacity-80"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
-        <p className="mt-2.5 text-xs text-slate-500">
+        <p className="mt-2.5 text-xs jg-text-muted">
           Save your job offer checks privately to your account.
         </p>
 
         {!isSupabaseConfigured && (
-          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+          <div className="mt-3 rounded-xl border p-3 text-xs jg-warning-box">
             <strong>Note:</strong> Supabase cloud credentials are not configured
             in <code className="font-mono">.env</code> yet. You can still use
             the offer verifier without signing in.
           </div>
         )}
 
-        <div className="mt-4 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
+        <div className="mt-4 grid grid-cols-2 gap-1 rounded-xl border jg-border jg-surface-elevated p-1">
           <button
             type="button"
             onClick={() => {
@@ -113,8 +122,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             }}
             className={`rounded-lg py-1.5 text-xs font-semibold transition ${
               mode === 'signin'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'jg-text-muted'
             }`}
           >
             Sign In
@@ -129,8 +138,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             }}
             className={`rounded-lg py-1.5 text-xs font-semibold transition ${
               mode === 'signup'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'jg-text-muted'
             }`}
           >
             Sign Up
@@ -141,13 +150,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div>
             <label
               htmlFor="modal-email"
-              className="block text-xs font-medium text-slate-700"
+              className="block text-xs font-semibold jg-text"
             >
               Email Address
             </label>
             <div className="relative mt-1">
               <Mail
-                className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400"
+                className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 jg-text-muted"
                 aria-hidden="true"
               />
               <input
@@ -157,7 +166,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:bg-white"
+                className="w-full rounded-xl py-2 pl-9 pr-3 text-sm jg-input"
               />
             </div>
           </div>
@@ -165,13 +174,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div>
             <label
               htmlFor="modal-password"
-              className="block text-xs font-medium text-slate-700"
+              className="block text-xs font-semibold jg-text"
             >
               Password (min 6 characters)
             </label>
             <div className="relative mt-1">
               <Lock
-                className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400"
+                className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 jg-text-muted"
                 aria-hidden="true"
               />
               <input
@@ -182,7 +191,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:bg-white"
+                className="w-full rounded-xl py-2 pl-9 pr-3 text-sm jg-input"
               />
             </div>
           </div>
@@ -190,10 +199,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {(localError || authError) && (
             <div
               role="alert"
-              className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800"
+              className="flex items-start gap-2 rounded-xl border p-3 text-xs jg-danger-box"
             >
               <AlertTriangle
-                className="mt-0.5 h-4 w-4 shrink-0 text-rose-600"
+                className="mt-0.5 h-4 w-4 shrink-0"
                 aria-hidden="true"
               />
               <span>{localError || authError}</span>
@@ -203,10 +212,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {statusMessage && (
             <div
               role="status"
-              className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800"
+              className="flex items-start gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-xs text-emerald-500"
             >
               <CheckCircle2
-                className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
+                className="mt-0.5 h-4 w-4 shrink-0"
                 aria-hidden="true"
               />
               <span>{statusMessage}</span>
@@ -216,7 +225,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="submit"
             disabled={submitting}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-60"
           >
             {submitting && (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

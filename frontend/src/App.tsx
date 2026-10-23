@@ -7,7 +7,14 @@ import { EducationalSections } from './components/EducationalSections';
 import { AuthModal } from './components/AuthModal';
 import { HistoryPanel } from './components/HistoryPanel';
 import { Footer } from './components/Footer';
+import { HelpAssistant } from './components/HelpAssistant';
+import { GuidedTour } from './components/GuidedTour';
+import {
+  ScreenshotOcrModal,
+  PrefillFormPayload,
+} from './components/ScreenshotOcrModal';
 import { useAuth } from './hooks/useAuth';
+import { useTheme } from './context/ThemeContext';
 import { analyzeVacancyApi, checkBackendHealthApi } from './lib/api';
 import { BUILTIN_SAMPLES } from './lib/samples';
 import {
@@ -26,28 +33,7 @@ export function App() {
     signOut,
     isSupabaseConfigured,
   } = useAuth();
-
-  const [isDark, setIsDark] = useState<boolean>(() => {
-    try {
-      return window.localStorage.getItem('jobguard_theme') === 'dark';
-    } catch {
-      return false;
-    }
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isDark) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    try {
-      window.localStorage.setItem('jobguard_theme', isDark ? 'dark' : 'light');
-    } catch {
-      // ignore storage errors
-    }
-  }, [isDark]);
+  const { isDark } = useTheme();
 
   const [activeTab, setActiveTab] = useState<MainViewTab>('analyze');
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
@@ -58,6 +44,16 @@ export function App() {
   const [isColdStartSlow, setIsColdStartSlow] = useState<boolean>(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
+
+  // Need Help, Guided Tour & Screenshot OCR state
+  const [tourOpen, setTourOpen] = useState<boolean>(false);
+  const [screenshotModalOpen, setScreenshotModalOpen] =
+    useState<boolean>(false);
+  const [externalPrefill, setExternalPrefill] =
+    useState<PrefillFormPayload | null>(null);
+  const [forceExpandSender, setForceExpandSender] = useState<boolean>(false);
+  const [hasExistingFormInput, setHasExistingFormInput] =
+    useState<boolean>(true);
 
   useEffect(() => {
     checkBackendHealthApi().catch(() => {
@@ -88,15 +84,16 @@ export function App() {
     }
   };
 
+  const handleApplyScreenshotPrefill = (payload: PrefillFormPayload) => {
+    setSelectedSample(null);
+    setExternalPrefill(payload);
+    setActiveTab('analyze');
+    setApiError(null);
+  };
+
   return (
-    <div
-      className={`relative min-h-screen flex flex-col transition-colors duration-300 ${
-        isDark
-          ? 'bg-[#08110e] text-slate-100'
-          : 'bg-gradient-to-br from-emerald-50/70 via-slate-50 to-teal-50/60 text-slate-900'
-      }`}
-    >
-      {/* Decorative Ambient Background Layer (Mesh Orbs + Subtle Dot Grid) */}
+    <div className="relative min-h-screen flex flex-col jg-bg transition-colors duration-200">
+      {/* Decorative Ambient Background Layer */}
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
@@ -105,24 +102,17 @@ export function App() {
           className={`absolute -top-32 -left-32 h-96 w-96 rounded-full blur-3xl transition-opacity duration-500 ${
             isDark
               ? 'bg-emerald-500/15 opacity-90'
-              : 'bg-emerald-300/40 opacity-80'
+              : 'bg-emerald-300/35 opacity-80'
           }`}
         />
         <div
           className={`absolute top-12 -right-28 h-96 w-96 rounded-full blur-3xl transition-opacity duration-500 ${
-            isDark ? 'bg-teal-500/12 opacity-80' : 'bg-cyan-200/45 opacity-85'
-          }`}
-        />
-        <div
-          className={`absolute -bottom-40 left-1/3 h-96 w-96 rounded-full blur-3xl transition-opacity duration-500 ${
-            isDark
-              ? 'bg-emerald-600/10 opacity-75'
-              : 'bg-amber-100/50 opacity-75'
+            isDark ? 'bg-teal-500/12 opacity-80' : 'bg-cyan-200/40 opacity-80'
           }`}
         />
         <svg
           className={`absolute inset-0 h-full w-full ${
-            isDark ? 'opacity-[0.14]' : 'opacity-[0.35]'
+            isDark ? 'opacity-[0.12]' : 'opacity-[0.28]'
           }`}
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -151,12 +141,12 @@ export function App() {
         onSignOut={signOut}
         activeTab={activeTab}
         onSelectTab={setActiveTab}
-        isDark={isDark}
-        onToggleTheme={() => setIsDark((prev) => !prev)}
       />
 
-      <main className="relative z-10 flex-1">
-        {activeTab === 'analyze' && <Hero />}
+      <main className="relative z-10 flex-1 pb-16">
+        {activeTab === 'analyze' && (
+          <Hero onOpenScreenshotModal={() => setScreenshotModalOpen(true)} />
+        )}
 
         <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 space-y-6">
           {activeTab === 'history' ? (
@@ -181,6 +171,11 @@ export function App() {
                   setResult(null);
                 }}
                 onOpenAuthModal={() => setAuthModalOpen(true)}
+                onOpenScreenshotModal={() => setScreenshotModalOpen(true)}
+                externalPrefill={externalPrefill}
+                onClearExternalPrefill={() => setExternalPrefill(null)}
+                forceExpandSender={forceExpandSender}
+                onHasContentChange={setHasExistingFormInput}
               />
 
               {result && <AnalysisResultView result={result} />}
@@ -190,6 +185,32 @@ export function App() {
       </main>
 
       <Footer onSelectTab={setActiveTab} />
+
+      <HelpAssistant
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        result={result}
+        apiError={apiError}
+        user={user}
+        onOpenAuthModal={() => setAuthModalOpen(true)}
+        onStartGuidedTour={() => setTourOpen(true)}
+        onOpenScreenshotModal={() => setScreenshotModalOpen(true)}
+        onExpandSenderFields={() => setForceExpandSender(true)}
+      />
+
+      <GuidedTour
+        isOpen={tourOpen}
+        onClose={() => setTourOpen(false)}
+        onSelectTab={setActiveTab}
+        onExpandSenderFields={() => setForceExpandSender(true)}
+      />
+
+      <ScreenshotOcrModal
+        isOpen={screenshotModalOpen}
+        onClose={() => setScreenshotModalOpen(false)}
+        hasExistingFormInput={hasExistingFormInput}
+        onApplyPrefill={handleApplyScreenshotPrefill}
+      />
 
       <AuthModal
         isOpen={authModalOpen}

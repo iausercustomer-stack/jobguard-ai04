@@ -2,7 +2,7 @@
   "name": "jobguard-ai-frontend",
   "private": true,
   "version": "1.0.0",
-  "description": "JobGuard AI — Local Job Scam and Vacancy Verifier (SRIMT Parakram Hackathon 2026 | AI-04)",
+  "description": "JobGuard AI \u2014 Local Job Scam and Vacancy Verifier (SRIMT Parakram Hackathon 2026 | AI-04)",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,8 @@
     "@supabase/supabase-js": "^2.43.0",
     "lucide-react": "^0.378.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "tesseract.js": "^5.1.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

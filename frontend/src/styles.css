@@ -3,8 +3,44 @@
 @tailwind utilities;
 
 :root {
-  --accent-emerald: #059669;
-  --accent-mint: #10b981;
+  --background: #F6FAF8;
+  --surface: #FFFFFF;
+  --surface-elevated: #F8FBFA;
+  --input-background: #F0F5F2;
+  --foreground: #11251D;
+  --foreground-muted: #576C62;
+  --border: #D9E6DE;
+  --accent: #059669;
+  --accent-hover: #047857;
+  --focus-ring: #10B981;
+  --danger-background: #FFF1F2;
+  --danger-foreground: #9F1239;
+  --danger-border: #FECDD3;
+  --warning-background: #FFFBEB;
+  --warning-foreground: #92400E;
+  --warning-border: #FDE68A;
+  color-scheme: light;
+}
+
+html.dark,
+.theme-dark {
+  --background: #08110F;
+  --surface: #101C19;
+  --surface-elevated: #172622;
+  --input-background: #10201B;
+  --foreground: #F0F7F3;
+  --foreground-muted: #A8BCB3;
+  --border: #29453A;
+  --accent: #10B981;
+  --accent-hover: #059669;
+  --focus-ring: #34D399;
+  --danger-background: #331C24;
+  --danger-foreground: #FFB4C1;
+  --danger-border: #6B273A;
+  --warning-background: #2C2212;
+  --warning-foreground: #FDE68A;
+  --warning-border: #6B4E1B;
+  color-scheme: dark;
 }
 
 * {
@@ -14,14 +50,122 @@
 html {
   scroll-behavior: smooth;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Semantic Design System Utility Classes */
+.jg-bg {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.jg-surface {
+  background-color: var(--surface);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+.jg-surface-elevated {
+  background-color: var(--surface-elevated);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+.jg-input {
+  background-color: var(--input-background);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.jg-input::placeholder {
+  color: var(--foreground-muted);
+  opacity: 0.78;
+}
+
+.jg-input:focus {
+  outline: none;
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22);
+}
+
+.jg-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.jg-input option {
+  background-color: var(--surface);
+  color: var(--foreground);
+}
+
+/* Prevent browser autofill from turning inputs bright white or yellow in dark mode */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--foreground) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--input-background) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: var(--foreground);
+}
+
+.jg-text {
+  color: var(--foreground);
+}
+
+.jg-text-muted {
+  color: var(--foreground-muted);
+}
+
+.jg-border {
+  border-color: var(--border);
+}
+
+.jg-danger-box {
+  background-color: var(--danger-background);
+  color: var(--danger-foreground);
+  border-color: var(--danger-border);
+}
+
+.jg-warning-box {
+  background-color: var(--warning-background);
+  color: var(--warning-foreground);
+  border-color: var(--warning-border);
+}
+
+/* Guided Tour Target Highlight Ring */
+.jg-tour-highlight {
+  position: relative;
+  z-index: 35 !important;
+  box-shadow: 0 0 0 3px var(--focus-ring), 0 0 0 8px rgba(16, 185, 129, 0.25) !important;
+  border-radius: 0.875rem;
+  transition: box-shadow 250ms ease;
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent-mint);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }

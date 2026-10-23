@@ -11,6 +11,7 @@ import {
   Moon,
 } from 'lucide-react';
 import { AuthUser } from '../types';
+import { useTheme } from '../context/ThemeContext';
 
 export type MainViewTab = 'analyze' | 'guide' | 'history';
 
@@ -20,8 +21,6 @@ interface NavbarProps {
   onSignOut: () => void;
   activeTab: MainViewTab;
   onSelectTab: (tab: MainViewTab) => void;
-  isDark: boolean;
-  onToggleTheme: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -30,12 +29,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSignOut,
   activeTab,
   onSelectTab,
-  isDark,
-  onToggleTheme,
 }) => {
+  const { isDark, toggleTheme } = useTheme();
+
   return (
-    <header className="sticky top-0 z-40 border-b border-emerald-900/10 dark:border-slate-800/80 bg-white/80 dark:bg-[#08110e]/85 backdrop-blur-md transition-colors duration-300">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+    <header className="sticky top-0 z-40 border-b jg-border jg-surface backdrop-blur-md transition-colors duration-200">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2.5 px-4 py-3 sm:px-6">
         <button
           type="button"
           onClick={() => onSelectTab('analyze')}
@@ -45,10 +44,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             <ShieldCheck className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
-            <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
+            <span className="text-base font-bold tracking-tight jg-text">
               JobGuard <span className="text-emerald-500">AI</span>
             </span>
-            <span className="hidden sm:inline-block ml-2 rounded-full border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
+            <span className="hidden sm:inline-block ml-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-500">
               Offer Verifier
             </span>
           </div>
@@ -56,22 +55,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <nav
           aria-label="Primary navigation"
-          className="flex items-center gap-1 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-100/90 dark:bg-slate-900/90 p-1 text-xs sm:text-sm"
+          className="flex items-center gap-1 rounded-xl border jg-border jg-surface-elevated p-1 text-xs sm:text-sm"
         >
           <button
             type="button"
             onClick={() => onSelectTab('analyze')}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition ${
+            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 font-semibold transition ${
               activeTab === 'analyze'
-                ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'jg-text-muted hover:jg-text'
             }`}
           >
             <Search
               className={`h-3.5 w-3.5 ${
-                activeTab === 'analyze' && isDark
-                  ? 'text-white'
-                  : 'text-emerald-500'
+                activeTab === 'analyze' ? 'text-white' : 'text-emerald-500'
               }`}
               aria-hidden="true"
             />
@@ -81,17 +78,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={() => onSelectTab('guide')}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition ${
+            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 font-semibold transition ${
               activeTab === 'guide'
-                ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'jg-text-muted hover:jg-text'
             }`}
           >
             <BookOpen
               className={`h-3.5 w-3.5 ${
-                activeTab === 'guide' && isDark
-                  ? 'text-white'
-                  : 'text-emerald-500'
+                activeTab === 'guide' ? 'text-white' : 'text-emerald-500'
               }`}
               aria-hidden="true"
             />
@@ -101,17 +96,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={() => onSelectTab('history')}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium transition ${
+            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 font-semibold transition ${
               activeTab === 'history'
-                ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'jg-text-muted hover:jg-text'
             }`}
           >
             <History
               className={`h-3.5 w-3.5 ${
-                activeTab === 'history' && isDark
-                  ? 'text-white'
-                  : 'text-emerald-500'
+                activeTab === 'history' ? 'text-white' : 'text-emerald-500'
               }`}
               aria-hidden="true"
             />
@@ -122,10 +115,10 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={onToggleTheme}
+            onClick={toggleTheme}
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-amber-300 shadow-2xs transition hover:bg-slate-50 dark:hover:border-amber-400/50"
+            className="inline-flex items-center gap-1.5 rounded-xl border jg-border jg-surface-elevated px-2.5 py-1.5 text-xs font-semibold jg-text transition hover:border-emerald-500/50"
           >
             {isDark ? (
               <>
@@ -134,7 +127,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </>
             ) : (
               <>
-                <Moon className="h-3.5 w-3.5 text-slate-600" aria-hidden="true" />
+                <Moon className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
                 <span className="hidden sm:inline">Dark</span>
               </>
             )}
@@ -142,14 +135,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {user ? (
             <div className="flex items-center gap-2">
-              <span className="hidden md:inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 dark:bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-emerald-800 dark:text-emerald-300">
+              <span className="hidden md:inline-flex items-center gap-1.5 rounded-xl border jg-border jg-surface-elevated px-2.5 py-1.5 text-xs font-medium jg-text">
                 <User className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
-                <span className="max-w-[130px] truncate">{user.email}</span>
+                <span className="max-w-[125px] truncate">{user.email}</span>
               </span>
               <button
                 type="button"
                 onClick={onSignOut}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-xl border jg-border jg-surface-elevated px-2.5 py-1.5 text-xs font-medium jg-text transition hover:border-rose-500/50"
               >
                 <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Sign Out</span>
@@ -159,9 +152,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenAuthModal}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 dark:border-emerald-500/40 bg-emerald-50/80 dark:bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 transition hover:bg-emerald-100/80"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-500 transition hover:bg-emerald-500/25"
             >
-              <LogIn className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
+              <LogIn className="h-3.5 w-3.5" aria-hidden="true" />
               <span>Sign In</span>
             </button>
           )}

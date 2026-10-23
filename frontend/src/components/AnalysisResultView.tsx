@@ -21,47 +21,43 @@ interface AnalysisResultViewProps {
 function getScorePalette(score: number) {
   if (score >= 70) {
     return {
-      badgeBg: 'bg-rose-50 border-rose-200 text-rose-800',
-      scoreText: 'text-rose-600',
-      barColor: 'bg-rose-500',
-      headerBg: 'bg-rose-50/60 border-rose-100',
+      badge: 'border-rose-500/40 bg-rose-500/15 text-rose-400',
+      scoreText: 'text-rose-500',
+      stroke: '#f43f5e',
     };
   }
   if (score >= 45) {
     return {
-      badgeBg: 'bg-amber-50 border-amber-200 text-amber-900',
-      scoreText: 'text-amber-600',
-      barColor: 'bg-amber-500',
-      headerBg: 'bg-amber-50/60 border-amber-100',
+      badge: 'border-amber-500/40 bg-amber-500/15 text-amber-400',
+      scoreText: 'text-amber-500',
+      stroke: '#f59e0b',
     };
   }
   if (score >= 20) {
     return {
-      badgeBg: 'bg-yellow-50 border-yellow-200 text-yellow-900',
-      scoreText: 'text-yellow-600',
-      barColor: 'bg-yellow-500',
-      headerBg: 'bg-yellow-50/50 border-yellow-100',
+      badge: 'border-yellow-500/40 bg-yellow-500/15 text-yellow-500',
+      scoreText: 'text-yellow-500',
+      stroke: '#eab308',
     };
   }
   return {
-    badgeBg: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-    scoreText: 'text-emerald-600',
-    barColor: 'bg-emerald-500',
-    headerBg: 'bg-emerald-50/50 border-emerald-100',
+    badge: 'border-emerald-500/40 bg-emerald-500/15 text-emerald-500',
+    scoreText: 'text-emerald-500',
+    stroke: '#10b981',
   };
 }
 
 function getSeverityBadge(severity: SeverityLevel): string {
   switch (severity) {
     case 'critical':
-      return 'bg-rose-100 text-rose-800 border-rose-200';
+      return 'border-rose-500/40 bg-rose-500/15 text-rose-400';
     case 'high':
-      return 'bg-amber-100 text-amber-800 border-amber-200';
+      return 'border-amber-500/40 bg-amber-500/15 text-amber-400';
     case 'medium':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      return 'border-yellow-500/40 bg-yellow-500/15 text-yellow-500';
     case 'low':
     default:
-      return 'bg-slate-100 text-slate-700 border-slate-200';
+      return 'jg-border jg-surface-elevated jg-text-muted';
   }
 }
 
@@ -91,6 +87,10 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
   }, [result]);
 
   const palette = getScorePalette(result.risk_score);
+  const radius = 26;
+  const circumference = 2 * Math.PI * radius;
+  const clamped = Math.min(100, Math.max(0, result.risk_score));
+  const dashOffset = circumference - (clamped / 100) * circumference;
 
   const toggleFinding = (code: string) => {
     setExpandedCodes((prev) => ({ ...prev, [code]: !prev[code] }));
@@ -99,27 +99,25 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
   return (
     <section
       aria-labelledby="results-heading"
-      className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm"
+      className="overflow-hidden rounded-2xl border jg-surface shadow-lg"
     >
-      {/* Clean Top Summary Header */}
-      <div
-        className={`flex flex-col justify-between gap-4 border-b p-5 sm:p-6 md:flex-row md:items-center ${palette.headerBg}`}
-      >
+      {/* Top Summary Header */}
+      <div className="flex flex-col justify-between gap-4 border-b jg-border jg-surface-elevated p-5 sm:p-6 md:flex-row md:items-center">
         <div className="space-y-1.5 md:max-w-xl">
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className={`inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold ${palette.badgeBg}`}
+              className={`inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold ${palette.badge}`}
             >
               {result.risk_category}
             </span>
             {result.redaction_count > 0 && (
-              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-600">
+              <span className="rounded-full border jg-border jg-surface px-2.5 py-0.5 text-[11px] font-medium jg-text-muted">
                 {result.redaction_count} sensitive ID(s) masked
               </span>
             )}
           </div>
 
-          <h2 id="results-heading" className="text-lg font-bold text-slate-900">
+          <h2 id="results-heading" className="text-lg font-bold jg-text">
             {result.findings.length === 0
               ? 'No obvious scam patterns found in the message text'
               : `${result.findings.length} warning sign${
@@ -127,36 +125,49 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
                 } spotted in this offer`}
           </h2>
 
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+          <p className="text-xs sm:text-sm jg-text-muted leading-relaxed">
             {result.category_explanation}
           </p>
         </div>
 
-        {/* Clean Score Meter */}
-        <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white px-5 py-3.5 shadow-sm shrink-0">
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              Risk Score
-            </div>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className={`text-3xl font-extrabold ${palette.scoreText}`}>
-                {result.risk_score}
-              </span>
-              <span className="text-xs font-medium text-slate-400">/ 100</span>
-            </div>
-          </div>
-          <div className="w-24">
-            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-              <div
-                className={`h-full transition-all duration-500 ${palette.barColor}`}
-                style={{
-                  width: `${Math.min(100, Math.max(0, result.risk_score))}%`,
-                }}
+        {/* Circular SVG Score Ring Gauge */}
+        <div className="flex items-center gap-3.5 rounded-2xl border jg-border jg-surface px-4 py-3 shrink-0">
+          <div className="relative flex h-16 w-16 items-center justify-center">
+            <svg
+              className="h-16 w-16 -rotate-90 transform"
+              viewBox="0 0 64 64"
+            >
+              <circle
+                cx="32"
+                cy="32"
+                r={radius}
+                stroke="currentColor"
+                className="opacity-15 jg-text-muted"
+                strokeWidth="6"
+                fill="transparent"
               />
-            </div>
-            <div className="mt-1 text-[10px] text-slate-400">
-              Heuristic indicator
-            </div>
+              <circle
+                cx="32"
+                cy="32"
+                r={radius}
+                stroke={palette.stroke}
+                strokeWidth="6"
+                strokeDasharray={circumference}
+                strokeDashoffset={dashOffset}
+                strokeLinecap="round"
+                fill="transparent"
+              />
+            </svg>
+            <span
+              className={`absolute text-base font-extrabold ${palette.scoreText}`}
+            >
+              {result.risk_score}
+            </span>
+          </div>
+          <div>
+            <div className="text-xs font-bold jg-text">Risk Score</div>
+            <div className="text-[11px] jg-text-muted">Out of 100</div>
+            <div className="text-[10px] jg-text-muted">Heuristic indicator</div>
           </div>
         </div>
       </div>
@@ -167,20 +178,17 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
           role="status"
           className={`flex items-center gap-2 border-b px-5 py-2.5 text-xs ${
             result.persistence.saved
-              ? 'border-emerald-100 bg-emerald-50/70 text-emerald-800'
-              : 'border-amber-100 bg-amber-50/70 text-amber-900'
+              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
+              : 'jg-warning-box border-b'
           }`}
         >
           {result.persistence.saved ? (
             <CheckCircle2
-              className="h-4 w-4 shrink-0 text-emerald-600"
+              className="h-4 w-4 shrink-0 text-emerald-500"
               aria-hidden="true"
             />
           ) : (
-            <AlertTriangle
-              className="h-4 w-4 shrink-0 text-amber-600"
-              aria-hidden="true"
-            />
+            <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
           )}
           <span>
             {result.persistence.saved
@@ -191,11 +199,14 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
         </div>
       )}
 
-      {/* Optional AI Explanation Banner (only if requested) */}
+      {/* Optional AI Explanation Banner */}
       {result.ai_status.requested && (
-        <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-3 text-xs text-slate-600">
-          <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-            <Sparkles className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
+        <div className="border-b jg-border jg-surface-elevated px-5 py-3 text-xs jg-text-muted">
+          <div className="flex items-center gap-1.5 font-semibold jg-text">
+            <Sparkles
+              className="h-3.5 w-3.5 text-emerald-500"
+              aria-hidden="true"
+            />
             <span>
               {result.ai_status.used
                 ? 'AI Summary'
@@ -210,15 +221,15 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
         </div>
       )}
 
-      {/* Segmented Sub-Navigation to prevent long vertical walls of text */}
-      <div className="flex border-b border-slate-200 bg-slate-50/50 px-5 pt-2 gap-4 text-xs sm:text-sm">
+      {/* Segmented Sub-Navigation */}
+      <div className="flex border-b jg-border jg-surface-elevated px-5 pt-2 gap-5 text-xs sm:text-sm">
         <button
           type="button"
           onClick={() => setSubTab('findings')}
           className={`border-b-2 pb-2.5 font-semibold transition ${
             subTab === 'findings'
-              ? 'border-emerald-600 text-emerald-700'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
+              ? 'border-emerald-500 text-emerald-500'
+              : 'border-transparent jg-text-muted hover:jg-text'
           }`}
         >
           Warning Signs ({result.findings.length})
@@ -229,8 +240,8 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
           onClick={() => setSubTab('domain')}
           className={`border-b-2 pb-2.5 font-semibold transition ${
             subTab === 'domain'
-              ? 'border-emerald-600 text-emerald-700'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
+              ? 'border-emerald-500 text-emerald-500'
+              : 'border-transparent jg-text-muted hover:jg-text'
           }`}
         >
           Sender &amp; Website Check
@@ -241,8 +252,8 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
           onClick={() => setSubTab('steps')}
           className={`border-b-2 pb-2.5 font-semibold transition ${
             subTab === 'steps'
-              ? 'border-emerald-600 text-emerald-700'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
+              ? 'border-emerald-500 text-emerald-500'
+              : 'border-transparent jg-text-muted hover:jg-text'
           }`}
         >
           How to Verify ({result.recommendations.length})
@@ -254,19 +265,17 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
         {subTab === 'findings' && (
           <div>
             {result.findings.length === 0 ? (
-              <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 text-sm text-slate-700">
+              <div className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm jg-text">
                 <ShieldCheck
-                  className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600"
+                  className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500"
                   aria-hidden="true"
                 />
                 <div>
-                  <strong className="text-slate-900">
-                    No red-flag phrases triggered:
-                  </strong>{' '}
-                  This message didn&apos;t demand registration fees, OTPs, or
-                  guaranteed selection without an interview. Still, always
-                  confirm the opening directly on the company&apos;s official
-                  careers website.
+                  <strong>No red-flag phrases triggered:</strong> This message
+                  didn&apos;t demand registration fees, OTPs, or guaranteed
+                  selection without an interview. Still, always confirm the
+                  opening directly on the company&apos;s official careers
+                  website.
                 </div>
               </div>
             ) : (
@@ -276,7 +285,7 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
                   return (
                     <div
                       key={finding.code}
-                      className="rounded-xl border border-slate-200 bg-white transition hover:border-slate-300"
+                      className="rounded-xl border jg-border jg-surface-elevated transition"
                     >
                       <button
                         type="button"
@@ -291,23 +300,23 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
                           >
                             {finding.severity}
                           </span>
-                          <span className="text-sm font-semibold text-slate-900">
+                          <span className="text-sm font-semibold jg-text">
                             {finding.title}
                           </span>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-xs font-medium text-slate-500">
+                          <span className="text-xs font-medium jg-text-muted">
                             +{finding.points} pts
                           </span>
                           {isOpen ? (
                             <ChevronUp
-                              className="h-4 w-4 text-slate-400"
+                              className="h-4 w-4 jg-text-muted"
                               aria-hidden="true"
                             />
                           ) : (
                             <ChevronDown
-                              className="h-4 w-4 text-slate-400"
+                              className="h-4 w-4 jg-text-muted"
                               aria-hidden="true"
                             />
                           )}
@@ -315,19 +324,19 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
                       </button>
 
                       {isOpen && (
-                        <div className="border-t border-slate-100 bg-slate-50/50 px-4 py-3 space-y-2 text-xs sm:text-sm">
-                          <div className="rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-xs text-slate-700">
-                            <span className="font-semibold text-slate-500">
+                        <div className="border-t jg-border jg-surface px-4 py-3 space-y-2 text-xs sm:text-sm">
+                          <div className="rounded-lg border jg-border jg-surface-elevated px-3 py-2 text-xs">
+                            <span className="font-semibold jg-text-muted">
                               Matched text:{' '}
                             </span>
-                            <span className="font-mono text-slate-900">
+                            <span className="font-mono jg-text">
                               {finding.evidence}
                             </span>
                           </div>
-                          <p className="text-slate-600 leading-relaxed">
+                          <p className="jg-text-muted leading-relaxed">
                             {finding.explanation}
                           </p>
-                          <p className="font-medium text-emerald-800">
+                          <p className="font-medium text-emerald-500">
                             What to do: {finding.recommendation}
                           </p>
                         </div>
@@ -342,19 +351,22 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
 
         {subTab === 'domain' && (
           <div className="space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-xs sm:text-sm text-slate-700">
-              <span className="font-semibold text-slate-900">Summary: </span>
+            <div className="rounded-xl border jg-border jg-surface-elevated p-4 text-xs sm:text-sm jg-text-muted">
+              <span className="font-semibold jg-text">Summary: </span>
               {result.verification.verification_summary}
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 text-xs">
-              <div className="rounded-xl border border-slate-200 p-3.5">
-                <div className="flex items-center gap-1.5 font-semibold text-slate-900">
-                  <Globe className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+              <div className="rounded-xl border jg-border jg-surface-elevated p-3.5">
+                <div className="flex items-center gap-1.5 font-semibold jg-text">
+                  <Globe
+                    className="h-4 w-4 text-emerald-500"
+                    aria-hidden="true"
+                  />
                   <span>Job Link Check</span>
                 </div>
                 {result.verification.url_provided ? (
-                  <div className="mt-2 space-y-1 text-slate-600">
+                  <div className="mt-2 space-y-1 jg-text-muted">
                     <div>
                       <strong>Valid format:</strong>{' '}
                       {result.verification.url_valid ? 'Yes' : 'No (Unsafe)'}
@@ -362,7 +374,7 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
                     {result.verification.root_domain && (
                       <div>
                         <strong>Domain:</strong>{' '}
-                        <span className="font-mono text-slate-900">
+                        <span className="font-mono jg-text">
                           {result.verification.root_domain}
                         </span>
                       </div>
@@ -373,29 +385,32 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <p className="mt-2 text-slate-400">No job link entered.</p>
+                  <p className="mt-2 jg-text-muted">No job link entered.</p>
                 )}
               </div>
 
-              <div className="rounded-xl border border-slate-200 p-3.5">
-                <div className="flex items-center gap-1.5 font-semibold text-slate-900">
-                  <Mail className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+              <div className="rounded-xl border jg-border jg-surface-elevated p-3.5">
+                <div className="flex items-center gap-1.5 font-semibold jg-text">
+                  <Mail
+                    className="h-4 w-4 text-emerald-500"
+                    aria-hidden="true"
+                  />
                   <span>Email vs. Website</span>
                 </div>
-                <p className="mt-2 text-slate-600 leading-relaxed">
+                <p className="mt-2 jg-text-muted leading-relaxed">
                   {result.verification.domain_comparison.explanation}
                 </p>
               </div>
 
-              <div className="rounded-xl border border-slate-200 p-3.5">
-                <div className="flex items-center gap-1.5 font-semibold text-slate-900">
+              <div className="rounded-xl border jg-border jg-surface-elevated p-3.5">
+                <div className="flex items-center gap-1.5 font-semibold jg-text">
                   <ShieldAlert
-                    className="h-4 w-4 text-emerald-600"
+                    className="h-4 w-4 text-emerald-500"
                     aria-hidden="true"
                   />
                   <span>Official Employer Match</span>
                 </div>
-                <p className="mt-2 text-slate-600 leading-relaxed">
+                <p className="mt-2 jg-text-muted leading-relaxed">
                   {result.verification.registry_check.note}
                 </p>
                 {result.verification.registry_check.official_careers_url && (
@@ -405,7 +420,7 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
                     }
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2 inline-flex items-center gap-1 font-medium text-emerald-700 underline"
+                    className="mt-2 inline-flex items-center gap-1 font-medium text-emerald-500 underline"
                   >
                     <span>Visit Official Careers Page</span>
                     <ExternalLink className="h-3 w-3" aria-hidden="true" />
@@ -418,25 +433,24 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
 
         {subTab === 'steps' && (
           <div className="space-y-4">
-            <ul className="space-y-2.5 text-xs sm:text-sm text-slate-700">
+            <ul className="space-y-2.5 text-xs sm:text-sm jg-text-muted">
               {result.recommendations.map((rec, index) => (
                 <li
                   key={index}
-                  className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3"
+                  className="flex items-start gap-2.5 rounded-xl border jg-border jg-surface-elevated p-3"
                 >
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
                     {index + 1}
                   </span>
-                  <span>{rec}</span>
+                  <span className="jg-text">{rec}</span>
                 </li>
               ))}
             </ul>
           </div>
         )}
 
-        {/* Concise 1-Line Disclaimer Footer */}
-        <div className="mt-5 flex items-start gap-2 border-t border-slate-100 pt-3.5 text-[11px] text-slate-400">
-          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+        <div className="mt-5 flex items-start gap-2 border-t jg-border pt-3.5 text-[11px] jg-text-muted">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span>{result.uncertainty_disclaimer}</span>
         </div>
       </div>
