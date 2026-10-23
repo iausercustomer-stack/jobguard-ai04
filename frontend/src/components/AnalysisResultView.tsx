@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  AlertOctagon,
   AlertTriangle,
   CheckCircle2,
-  Clock,
-  Cpu,
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
   Globe,
   Info,
@@ -19,415 +18,427 @@ interface AnalysisResultViewProps {
   result: AnalyzeResponse;
 }
 
-function getScoreBadgeStyles(score: number): {
-  ring: string;
-  bg: string;
-  text: string;
-  bar: string;
-} {
+function getScorePalette(score: number) {
   if (score >= 70) {
     return {
-      ring: 'border-rose-500/60',
-      bg: 'bg-rose-950/40',
-      text: 'text-rose-300',
-      bar: 'bg-rose-500',
+      badgeBg: 'bg-rose-50 border-rose-200 text-rose-800',
+      scoreText: 'text-rose-600',
+      barColor: 'bg-rose-500',
+      headerBg: 'bg-rose-50/60 border-rose-100',
     };
   }
   if (score >= 45) {
     return {
-      ring: 'border-amber-500/60',
-      bg: 'bg-amber-950/40',
-      text: 'text-amber-300',
-      bar: 'bg-amber-500',
+      badgeBg: 'bg-amber-50 border-amber-200 text-amber-900',
+      scoreText: 'text-amber-600',
+      barColor: 'bg-amber-500',
+      headerBg: 'bg-amber-50/60 border-amber-100',
     };
   }
   if (score >= 20) {
     return {
-      ring: 'border-yellow-500/60',
-      bg: 'bg-yellow-950/30',
-      text: 'text-yellow-200',
-      bar: 'bg-yellow-400',
+      badgeBg: 'bg-yellow-50 border-yellow-200 text-yellow-900',
+      scoreText: 'text-yellow-600',
+      barColor: 'bg-yellow-500',
+      headerBg: 'bg-yellow-50/50 border-yellow-100',
     };
   }
   return {
-    ring: 'border-emerald-500/60',
-    bg: 'bg-emerald-950/40',
-    text: 'text-emerald-300',
-    bar: 'bg-emerald-400',
+    badgeBg: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+    scoreText: 'text-emerald-600',
+    barColor: 'bg-emerald-500',
+    headerBg: 'bg-emerald-50/50 border-emerald-100',
   };
 }
 
-function getSeverityStyles(severity: SeverityLevel): string {
+function getSeverityBadge(severity: SeverityLevel): string {
   switch (severity) {
     case 'critical':
-      return 'border-rose-500/50 bg-rose-950/60 text-rose-200';
+      return 'bg-rose-100 text-rose-800 border-rose-200';
     case 'high':
-      return 'border-amber-500/50 bg-amber-950/60 text-amber-200';
+      return 'bg-amber-100 text-amber-800 border-amber-200';
     case 'medium':
-      return 'border-yellow-500/50 bg-yellow-950/50 text-yellow-200';
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     case 'low':
     default:
-      return 'border-sky-500/50 bg-sky-950/50 text-sky-200';
+      return 'bg-slate-100 text-slate-700 border-slate-200';
   }
 }
 
 export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({
   result,
 }) => {
-  const scoreStyle = getScoreBadgeStyles(result.risk_score);
-  const formattedTime = new Date(result.analyzed_at).toLocaleString('en-IN', {
-    dateStyle: 'medium',
-    timeStyle: 'medium',
-  });
+  const [subTab, setSubTab] = useState<'findings' | 'domain' | 'steps'>(
+    'findings'
+  );
+  const [expandedCodes, setExpandedCodes] = useState<Record<string, boolean>>(
+    () => {
+      const initial: Record<string, boolean> = {};
+      if (result.findings.length > 0) {
+        initial[result.findings[0].code] = true;
+      }
+      return initial;
+    }
+  );
+
+  React.useEffect(() => {
+    const next: Record<string, boolean> = {};
+    if (result.findings.length > 0) {
+      next[result.findings[0].code] = true;
+    }
+    setExpandedCodes(next);
+    setSubTab('findings');
+  }, [result]);
+
+  const palette = getScorePalette(result.risk_score);
+
+  const toggleFinding = (code: string) => {
+    setExpandedCodes((prev) => ({ ...prev, [code]: !prev[code] }));
+  };
 
   return (
     <section
       aria-labelledby="results-heading"
-      className="space-y-6 rounded-2xl border border-emerald-800/60 bg-[#0c1d17] p-5 sm:p-7 shadow-2xl"
+      className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm"
     >
-      {/* Top Status & Score Banner */}
-      <div className="flex flex-col justify-between gap-6 border-b border-emerald-900/60 pb-6 lg:flex-row lg:items-center">
-        <div className="space-y-2 lg:max-w-2xl">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-            <span className="inline-flex items-center gap-1 rounded-md border border-emerald-900 bg-[#07120e] px-2.5 py-1 text-emerald-300">
-              <Cpu className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>
-                Mode:{' '}
-                {result.analysis_mode === 'deterministic_plus_ai'
-                  ? 'Deterministic + AI Explanation'
-                  : 'Deterministic Rule Engine'}
-              </span>
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-md border border-emerald-900 bg-[#07120e] px-2.5 py-1">
-              <Clock className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
-              <span>{formattedTime}</span>
+      {/* Clean Top Summary Header */}
+      <div
+        className={`flex flex-col justify-between gap-4 border-b p-5 sm:p-6 md:flex-row md:items-center ${palette.headerBg}`}
+      >
+        <div className="space-y-1.5 md:max-w-xl">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-semibold ${palette.badgeBg}`}
+            >
+              {result.risk_category}
             </span>
             {result.redaction_count > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-md border border-amber-700/50 bg-amber-950/40 px-2.5 py-1 text-amber-200">
-                <span>
-                  Auto-Redacted {result.redaction_count} Sensitive ID(s)
-                </span>
+              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-600">
+                {result.redaction_count} sensitive ID(s) masked
               </span>
             )}
           </div>
 
-          <h2 id="results-heading" className="text-2xl font-extrabold text-white">
-            {result.risk_category}
+          <h2 id="results-heading" className="text-lg font-bold text-slate-900">
+            {result.findings.length === 0
+              ? 'No obvious scam patterns found in the message text'
+              : `${result.findings.length} warning sign${
+                  result.findings.length === 1 ? '' : 's'
+                } spotted in this offer`}
           </h2>
-          <p className="text-sm text-slate-300 leading-relaxed">
+
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
             {result.category_explanation}
           </p>
         </div>
 
-        {/* Heuristic Score Box */}
-        <div
-          className={`flex flex-col items-center justify-center rounded-2xl border-2 px-6 py-4 min-w-[210px] ${scoreStyle.ring} ${scoreStyle.bg}`}
-        >
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-            Heuristic Risk Score
-          </span>
-          <div className="mt-1 flex items-baseline gap-1">
-            <span className={`text-4xl font-black ${scoreStyle.text}`}>
-              {result.risk_score}
-            </span>
-            <span className="text-sm font-semibold text-slate-400">/ 100</span>
+        {/* Clean Score Meter */}
+        <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white px-5 py-3.5 shadow-sm shrink-0">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              Risk Score
+            </div>
+            <div className="flex items-baseline gap-1 mt-0.5">
+              <span className={`text-3xl font-extrabold ${palette.scoreText}`}>
+                {result.risk_score}
+              </span>
+              <span className="text-xs font-medium text-slate-400">/ 100</span>
+            </div>
           </div>
-          <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-slate-900">
-            <div
-              className={`h-full transition-all duration-500 ${scoreStyle.bar}`}
-              style={{ width: `${Math.min(100, Math.max(0, result.risk_score))}%` }}
-            />
+          <div className="w-24">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                className={`h-full transition-all duration-500 ${palette.barColor}`}
+                style={{
+                  width: `${Math.min(100, Math.max(0, result.risk_score))}%`,
+                }}
+              />
+            </div>
+            <div className="mt-1 text-[10px] text-slate-400">
+              Heuristic indicator
+            </div>
           </div>
-          <span className="mt-1.5 text-[11px] text-slate-400 text-center">
-            Heuristic indicator, not probability
-          </span>
         </div>
       </div>
 
-      {/* Persistence feedback if save_report was requested */}
+      {/* Persistence status if requested */}
       {result.persistence.requested && (
         <div
           role="status"
-          className={`flex items-start gap-2.5 rounded-xl border p-3.5 text-xs sm:text-sm ${
+          className={`flex items-center gap-2 border-b px-5 py-2.5 text-xs ${
             result.persistence.saved
-              ? 'border-emerald-500/40 bg-emerald-950/40 text-emerald-200'
-              : 'border-amber-500/50 bg-amber-950/40 text-amber-200'
+              ? 'border-emerald-100 bg-emerald-50/70 text-emerald-800'
+              : 'border-amber-100 bg-amber-50/70 text-amber-900'
           }`}
         >
           {result.persistence.saved ? (
             <CheckCircle2
-              className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400"
+              className="h-4 w-4 shrink-0 text-emerald-600"
               aria-hidden="true"
             />
           ) : (
             <AlertTriangle
-              className="mt-0.5 h-4 w-4 shrink-0 text-amber-400"
+              className="h-4 w-4 shrink-0 text-amber-600"
               aria-hidden="true"
             />
           )}
-          <div>
-            {result.persistence.saved ? (
-              <span>
-                <strong>Report Saved:</strong> This analysis was saved to your
-                private report history (ID: {result.persistence.report_id || 'saved'}).
-              </span>
-            ) : (
-              <span>
-                <strong>Analysis Succeeded, Report Not Saved:</strong>{' '}
-                {result.persistence.error ||
-                  'Could not persist report to database.'}
-              </span>
-            )}
-          </div>
+          <span>
+            {result.persistence.saved
+              ? 'Saved to your private report history.'
+              : result.persistence.error ||
+                'Analysis completed, but report was not saved.'}
+          </span>
         </div>
       )}
 
-      {/* Executive Summary */}
-      <div className="rounded-xl border border-emerald-900/70 bg-[#07120e] p-4">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-          Analysis Summary
-        </h3>
-        <p className="mt-1.5 text-sm text-slate-200 leading-relaxed">
-          {result.summary}
-        </p>
-      </div>
-
-      {/* Optional AI Explanation Layer Output or Transparent Fallback Note */}
+      {/* Optional AI Explanation Banner (only if requested) */}
       {result.ai_status.requested && (
-        <div className="rounded-xl border border-emerald-700/50 bg-[#112820]/60 p-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-sm font-bold text-emerald-300">
-              <Sparkles className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-              <span>AI-Assisted Plain-Language Explanation</span>
-            </div>
-            <span className="rounded-full border border-emerald-700/60 bg-emerald-950 px-2.5 py-0.5 text-[11px] text-emerald-300">
+        <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-3 text-xs text-slate-600">
+          <div className="flex items-center gap-1.5 font-semibold text-slate-800">
+            <Sparkles className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
+            <span>
               {result.ai_status.used
-                ? `Model: ${result.ai_status.model}`
-                : 'Deterministic Fallback Active'}
+                ? 'AI Summary'
+                : 'Rule-Based Summary (AI Offline)'}
             </span>
           </div>
-
-          {result.ai_status.used && result.ai_status.explanation ? (
-            <div className="mt-3 space-y-3 text-sm text-slate-200">
-              <p>{result.ai_status.explanation.plain_language_summary}</p>
-              {result.ai_status.explanation.key_questions_to_ask_recruiter.length >
-                0 && (
-                <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
-                    Questions to Ask the Recruiter:
-                  </h4>
-                  <ul className="mt-1 list-disc pl-5 space-y-1 text-xs text-slate-300">
-                    {result.ai_status.explanation.key_questions_to_ask_recruiter.map(
-                      (q, i) => (
-                        <li key={i}>{q}</li>
-                      )
-                    )}
-                  </ul>
-                </div>
-              )}
-              <p className="text-xs italic text-slate-400">
-                {result.ai_status.explanation.caution_note}
-              </p>
-            </div>
-          ) : (
-            <p className="mt-2 text-xs text-slate-300">
-              {result.ai_status.fallback_reason ||
-                'AI explanation layer was not used; displaying complete deterministic rule-based findings below.'}
-            </p>
-          )}
+          <p className="mt-1">
+            {result.ai_status.used && result.ai_status.explanation
+              ? result.ai_status.explanation.plain_language_summary
+              : result.ai_status.fallback_reason}
+          </p>
         </div>
       )}
 
-      {/* Extracted Warning Findings */}
-      <div>
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold text-white">
-            Specific Warning Indicators &amp; Extracted Evidence ({result.findings.length})
-          </h3>
-          <span className="text-xs text-slate-400">
-            Duplicate matches per category are merged &amp; counted once
-          </span>
-        </div>
+      {/* Segmented Sub-Navigation to prevent long vertical walls of text */}
+      <div className="flex border-b border-slate-200 bg-slate-50/50 px-5 pt-2 gap-4 text-xs sm:text-sm">
+        <button
+          type="button"
+          onClick={() => setSubTab('findings')}
+          className={`border-b-2 pb-2.5 font-semibold transition ${
+            subTab === 'findings'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Warning Signs ({result.findings.length})
+        </button>
 
-        {result.findings.length === 0 ? (
-          <div className="mt-3 flex items-start gap-3 rounded-xl border border-emerald-800/60 bg-[#07120e] p-4 text-sm text-slate-300">
-            <ShieldCheck
-              className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400"
-              aria-hidden="true"
-            />
-            <div>
-              <strong className="text-emerald-300">
-                No Heuristic Scam Rules Triggered:
-              </strong>{' '}
-              The submitted text did not match upfront fee demands, credential/OTP harvesting,
-              or high-pressure scam phrases. Remember that scammers sometimes copy real job
-              descriptions—always verify the vacancy on the employer&apos;s official website.
-            </div>
-          </div>
-        ) : (
-          <div className="mt-3 space-y-3">
-            {result.findings.map((finding: Finding) => (
-              <div
-                key={finding.code}
-                className="rounded-xl border border-emerald-900/70 bg-[#07120e] p-4 transition hover:border-emerald-700/70"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-xs font-semibold text-emerald-400">
-                      [{finding.code}]
-                    </span>
-                    <h4 className="text-sm font-bold text-white">
-                      {finding.title}
-                    </h4>
-                  </div>
+        <button
+          type="button"
+          onClick={() => setSubTab('domain')}
+          className={`border-b-2 pb-2.5 font-semibold transition ${
+            subTab === 'domain'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Sender &amp; Website Check
+        </button>
 
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase ${getSeverityStyles(
-                        finding.severity
-                      )}`}
-                    >
-                      {finding.severity}
-                    </span>
-                    <span className="rounded-md border border-slate-700 bg-slate-900 px-2 py-0.5 font-mono text-xs font-semibold text-slate-200">
-                      +{finding.points} pts
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-2.5 rounded-lg border border-slate-800 bg-slate-950/90 px-3 py-2 font-mono text-xs text-amber-200">
-                  <span className="text-slate-400 select-none">Evidence: </span>
-                  {finding.evidence}
-                </div>
-
-                <p className="mt-2.5 text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  {finding.explanation}
-                </p>
-
-                <div className="mt-2 flex items-start gap-1.5 text-xs font-medium text-emerald-300">
-                  <AlertOctagon className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  <span>Action: {finding.recommendation}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={() => setSubTab('steps')}
+          className={`border-b-2 pb-2.5 font-semibold transition ${
+            subTab === 'steps'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          How to Verify ({result.recommendations.length})
+        </button>
       </div>
 
-      {/* Safe URL, Email & Official Employer Verification Panel */}
-      <div className="rounded-xl border border-emerald-900/70 bg-[#07120e] p-4 sm:p-5 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Globe className="h-5 w-5 text-emerald-400" aria-hidden="true" />
-            <h3 className="text-base font-bold text-white">
-              Safe URL, Domain &amp; Employer Verification
-            </h3>
-          </div>
-          <span className="rounded-full border border-emerald-700/50 bg-emerald-950/70 px-3 py-0.5 text-xs font-semibold text-emerald-300">
-            Status: {result.verification.verification_status.replace(/_/g, ' ').toUpperCase()}
-          </span>
-        </div>
-
-        <p className="text-xs sm:text-sm text-slate-300">
-          {result.verification.verification_summary}
-        </p>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3 text-xs">
-          <div className="rounded-lg border border-emerald-950 bg-[#0c1d17] p-3">
-            <div className="flex items-center gap-1.5 font-semibold text-emerald-300">
-              <Globe className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>URL Inspection (Zero-Fetch Safe Parse)</span>
-            </div>
-            {result.verification.url_provided ? (
-              <div className="mt-1.5 space-y-1 text-slate-300">
+      {/* Tab Content */}
+      <div className="p-5 sm:p-6">
+        {subTab === 'findings' && (
+          <div>
+            {result.findings.length === 0 ? (
+              <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 text-sm text-slate-700">
+                <ShieldCheck
+                  className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600"
+                  aria-hidden="true"
+                />
                 <div>
-                  <strong>Valid HTTP/HTTPS:</strong>{' '}
-                  {result.verification.url_valid ? 'Yes' : 'No (Rejected)'}
-                </div>
-                {result.verification.normalized_hostname && (
-                  <div>
-                    <strong>Hostname:</strong>{' '}
-                    <span className="font-mono text-emerald-200">
-                      {result.verification.normalized_hostname}
-                    </span>
-                  </div>
-                )}
-                {result.verification.root_domain && (
-                  <div>
-                    <strong>Root Domain:</strong>{' '}
-                    <span className="font-mono text-emerald-200">
-                      {result.verification.root_domain}
-                    </span>
-                  </div>
-                )}
-                <div>
-                  <strong>Shortened Link:</strong>{' '}
-                  {result.verification.is_shortened_url ? 'Yes (Warning)' : 'No'}
+                  <strong className="text-slate-900">
+                    No red-flag phrases triggered:
+                  </strong>{' '}
+                  This message didn&apos;t demand registration fees, OTPs, or
+                  guaranteed selection without an interview. Still, always
+                  confirm the opening directly on the company&apos;s official
+                  careers website.
                 </div>
               </div>
             ) : (
-              <p className="mt-1.5 text-slate-400">No job URL was supplied.</p>
+              <div className="space-y-2.5">
+                {result.findings.map((finding: Finding) => {
+                  const isOpen = Boolean(expandedCodes[finding.code]);
+                  return (
+                    <div
+                      key={finding.code}
+                      className="rounded-xl border border-slate-200 bg-white transition hover:border-slate-300"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleFinding(finding.code)}
+                        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${getSeverityBadge(
+                              finding.severity
+                            )}`}
+                          >
+                            {finding.severity}
+                          </span>
+                          <span className="text-sm font-semibold text-slate-900">
+                            {finding.title}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs font-medium text-slate-500">
+                            +{finding.points} pts
+                          </span>
+                          {isOpen ? (
+                            <ChevronUp
+                              className="h-4 w-4 text-slate-400"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <ChevronDown
+                              className="h-4 w-4 text-slate-400"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </div>
+                      </button>
+
+                      {isOpen && (
+                        <div className="border-t border-slate-100 bg-slate-50/50 px-4 py-3 space-y-2 text-xs sm:text-sm">
+                          <div className="rounded-lg border border-slate-200/80 bg-white px-3 py-2 text-xs text-slate-700">
+                            <span className="font-semibold text-slate-500">
+                              Matched text:{' '}
+                            </span>
+                            <span className="font-mono text-slate-900">
+                              {finding.evidence}
+                            </span>
+                          </div>
+                          <p className="text-slate-600 leading-relaxed">
+                            {finding.explanation}
+                          </p>
+                          <p className="font-medium text-emerald-800">
+                            What to do: {finding.recommendation}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
+        )}
 
-          <div className="rounded-lg border border-emerald-950 bg-[#0c1d17] p-3">
-            <div className="flex items-center gap-1.5 font-semibold text-emerald-300">
-              <Mail className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Recruiter Email vs. Website Domain</span>
+        {subTab === 'domain' && (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-xs sm:text-sm text-slate-700">
+              <span className="font-semibold text-slate-900">Summary: </span>
+              {result.verification.verification_summary}
             </div>
-            <p className="mt-1.5 text-slate-300 leading-relaxed">
-              {result.verification.domain_comparison.explanation}
-            </p>
-          </div>
 
-          <div className="rounded-lg border border-emerald-950 bg-[#0c1d17] p-3">
-            <div className="flex items-center gap-1.5 font-semibold text-emerald-300">
-              <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Official Employer Registry Check</span>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 text-xs">
+              <div className="rounded-xl border border-slate-200 p-3.5">
+                <div className="flex items-center gap-1.5 font-semibold text-slate-900">
+                  <Globe className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                  <span>Job Link Check</span>
+                </div>
+                {result.verification.url_provided ? (
+                  <div className="mt-2 space-y-1 text-slate-600">
+                    <div>
+                      <strong>Valid format:</strong>{' '}
+                      {result.verification.url_valid ? 'Yes' : 'No (Unsafe)'}
+                    </div>
+                    {result.verification.root_domain && (
+                      <div>
+                        <strong>Domain:</strong>{' '}
+                        <span className="font-mono text-slate-900">
+                          {result.verification.root_domain}
+                        </span>
+                      </div>
+                    )}
+                    <div>
+                      <strong>Link shortener:</strong>{' '}
+                      {result.verification.is_shortened_url ? 'Yes' : 'No'}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-slate-400">No job link entered.</p>
+                )}
+              </div>
+
+              <div className="rounded-xl border border-slate-200 p-3.5">
+                <div className="flex items-center gap-1.5 font-semibold text-slate-900">
+                  <Mail className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                  <span>Email vs. Website</span>
+                </div>
+                <p className="mt-2 text-slate-600 leading-relaxed">
+                  {result.verification.domain_comparison.explanation}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 p-3.5">
+                <div className="flex items-center gap-1.5 font-semibold text-slate-900">
+                  <ShieldAlert
+                    className="h-4 w-4 text-emerald-600"
+                    aria-hidden="true"
+                  />
+                  <span>Official Employer Match</span>
+                </div>
+                <p className="mt-2 text-slate-600 leading-relaxed">
+                  {result.verification.registry_check.note}
+                </p>
+                {result.verification.registry_check.official_careers_url && (
+                  <a
+                    href={
+                      result.verification.registry_check.official_careers_url
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-1 font-medium text-emerald-700 underline"
+                  >
+                    <span>Visit Official Careers Page</span>
+                    <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                  </a>
+                )}
+              </div>
             </div>
-            <p className="mt-1.5 text-slate-300 leading-relaxed">
-              {result.verification.registry_check.note}
-            </p>
-            {result.verification.registry_check.official_careers_url && (
-              <a
-                href={result.verification.registry_check.official_careers_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1 text-emerald-400 underline hover:text-emerald-300"
-              >
-                <span>Official Careers Portal</span>
-                <ExternalLink className="h-3 w-3" aria-hidden="true" />
-              </a>
-            )}
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* Recommended Next Steps */}
-      <div className="rounded-xl border border-emerald-900/70 bg-[#07120e] p-4 sm:p-5">
-        <h3 className="text-base font-bold text-white">
-          Recommended Independent Verification Steps
-        </h3>
-        <ul className="mt-3 space-y-2 text-xs sm:text-sm text-slate-300">
-          {result.recommendations.map((rec, index) => (
-            <li key={index} className="flex items-start gap-2.5">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-xs font-bold text-emerald-300">
-                {index + 1}
-              </span>
-              <span>{rec}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+        {subTab === 'steps' && (
+          <div className="space-y-4">
+            <ul className="space-y-2.5 text-xs sm:text-sm text-slate-700">
+              {result.recommendations.map((rec, index) => (
+                <li
+                  key={index}
+                  className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3"
+                >
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
+                    {index + 1}
+                  </span>
+                  <span>{rec}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-      {/* Methodology & Uncertainty Disclaimer */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 text-xs text-slate-400 space-y-1.5">
-        <div className="flex items-center gap-1.5 font-semibold text-slate-300">
-          <Info className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-          <span>Methodology &amp; Uncertainty Disclaimer</span>
+        {/* Concise 1-Line Disclaimer Footer */}
+        <div className="mt-5 flex items-start gap-2 border-t border-slate-100 pt-3.5 text-[11px] text-slate-400">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+          <span>{result.uncertainty_disclaimer}</span>
         </div>
-        <p>{result.methodology_note}</p>
-        <p className="text-slate-300">{result.uncertainty_disclaimer}</p>
       </div>
     </section>
   );

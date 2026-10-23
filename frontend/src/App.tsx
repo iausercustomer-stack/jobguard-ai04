@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navbar } from './components/Navbar';
+import { Navbar, MainViewTab } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { AnalysisForm } from './components/AnalysisForm';
 import { AnalysisResultView } from './components/AnalysisResultView';
@@ -27,7 +27,7 @@ export function App() {
     isSupabaseConfigured,
   } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'analyze' | 'history'>('analyze');
+  const [activeTab, setActiveTab] = useState<MainViewTab>('analyze');
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   const [selectedSample, setSelectedSample] = useState<SampleMessage | null>(
     BUILTIN_SAMPLES[0]
@@ -40,29 +40,9 @@ export function App() {
   // Trigger a single non-blocking health warm-up when a user/judge opens the app
   useEffect(() => {
     checkBackendHealthApi().catch(() => {
-      // Non-fatal on initial load; actual errors are surfaced on form submission
+      // Non-fatal on initial load
     });
   }, []);
-
-  const handleLoadSample = (sampleId: string) => {
-    const found =
-      BUILTIN_SAMPLES.find((s) => s.id === sampleId) || BUILTIN_SAMPLES[0];
-    setSelectedSample({ ...found });
-    setActiveTab('analyze');
-    setApiError(null);
-    const formEl = document.getElementById('analyzer-form');
-    if (formEl) {
-      formEl.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const handleJumpToForm = () => {
-    setActiveTab('analyze');
-    const formEl = document.getElementById('analyzer-form');
-    if (formEl) {
-      formEl.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
 
   const handleSubmitAnalysis = async (payload: AnalyzeRequestPayload) => {
     setIsLoading(true);
@@ -88,7 +68,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#07120e] text-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
       <Navbar
         user={user}
         onOpenAuthModal={() => setAuthModalOpen(true)}
@@ -98,17 +78,16 @@ export function App() {
       />
 
       <main className="flex-1">
-        <Hero
-          onLoadSample={handleLoadSample}
-          onJumpToForm={handleJumpToForm}
-        />
+        {activeTab === 'analyze' && <Hero />}
 
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+        <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 space-y-6">
           {activeTab === 'history' ? (
             <HistoryPanel
               user={user}
               onOpenAuthModal={() => setAuthModalOpen(true)}
             />
+          ) : activeTab === 'guide' ? (
+            <EducationalSections />
           ) : (
             <>
               <AnalysisForm
@@ -118,19 +97,21 @@ export function App() {
                 errorMessage={apiError}
                 user={user}
                 selectedSample={selectedSample}
-                onClearSample={() => setSelectedSample(null)}
+                onSelectSample={(s) => setSelectedSample(s)}
+                onClearSample={() => {
+                  setSelectedSample(null);
+                  setResult(null);
+                }}
                 onOpenAuthModal={() => setAuthModalOpen(true)}
               />
 
               {result && <AnalysisResultView result={result} />}
-
-              <EducationalSections />
             </>
           )}
         </div>
       </main>
 
-      <Footer />
+      <Footer onSelectTab={setActiveTab} />
 
       <AuthModal
         isOpen={authModalOpen}

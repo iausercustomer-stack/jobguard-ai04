@@ -72,44 +72,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      aria-labelledby="auth-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+      aria-labelledby="modal-auth-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
     >
-      <div className="w-full max-w-md rounded-2xl border border-emerald-800/70 bg-[#0c1d17] p-6 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-emerald-900/60 pb-3">
-          <h2 id="auth-modal-title" className="text-lg font-bold text-white">
-            {mode === 'signin'
-              ? 'Sign In to JobGuard AI'
-              : 'Create Private JobGuard Account'}
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h2 id="modal-auth-title" className="text-base font-bold text-slate-900">
+            {mode === 'signin' ? 'Sign In' : 'Create Account'}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close authentication modal"
-            className="rounded-lg p-1 text-slate-400 hover:bg-emerald-950 hover:text-white"
+            aria-label="Close modal"
+            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
-        <p className="mt-3 text-xs text-slate-300 leading-relaxed">
-          Authenticated users can save vacancy analysis reports to a private
-          PostgreSQL history protected by Supabase Row Level Security (
-          <code className="text-emerald-300">auth.uid() = user_id</code>).
+        <p className="mt-2.5 text-xs text-slate-500">
+          Save your job offer checks privately to your account.
         </p>
 
         {!isSupabaseConfigured && (
-          <div className="mt-3 rounded-xl border border-amber-500/40 bg-amber-950/40 p-3 text-xs text-amber-200">
-            <strong>Configuration Note:</strong>{' '}
-            <code className="text-amber-100">VITE_SUPABASE_URL</code> and{' '}
-            <code className="text-amber-100">VITE_SUPABASE_ANON_KEY</code> are
-            currently set to placeholders. Configure your Supabase project in{' '}
-            <code className="text-amber-100">.env</code> to enable cloud
-            authentication. The core vacancy analyzer works without signing in.
+          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+            <strong>Note:</strong> Supabase cloud credentials are not configured
+            in <code className="font-mono">.env</code> yet. You can still use
+            the offer verifier without signing in.
           </div>
         )}
 
-        <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-[#07120e] p-1">
+        <div className="mt-4 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
           <button
             type="button"
             onClick={() => {
@@ -120,8 +113,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             }}
             className={`rounded-lg py-1.5 text-xs font-semibold transition ${
               mode === 'signin'
-                ? 'bg-emerald-500 text-slate-950'
-                : 'text-slate-300 hover:text-white'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600'
             }`}
           >
             Sign In
@@ -136,60 +129,60 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             }}
             className={`rounded-lg py-1.5 text-xs font-semibold transition ${
               mode === 'signup'
-                ? 'bg-emerald-500 text-slate-950'
-                : 'text-slate-300 hover:text-white'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600'
             }`}
           >
             Sign Up
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-4 space-y-3.5" noValidate>
+        <form onSubmit={handleSubmit} className="mt-4 space-y-3" noValidate>
           <div>
             <label
-              htmlFor="auth-email"
-              className="block text-xs font-semibold uppercase tracking-wider text-slate-300"
+              htmlFor="modal-email"
+              className="block text-xs font-medium text-slate-700"
             >
               Email Address
             </label>
             <div className="relative mt-1">
               <Mail
-                className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500"
+                className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400"
                 aria-hidden="true"
               />
               <input
-                id="auth-email"
+                id="modal-email"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full rounded-xl border border-emerald-900/80 bg-[#07120e] py-2 pl-9 pr-3 text-sm text-slate-100 placeholder-slate-500 focus:border-emerald-400"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:bg-white"
               />
             </div>
           </div>
 
           <div>
             <label
-              htmlFor="auth-password"
-              className="block text-xs font-semibold uppercase tracking-wider text-slate-300"
+              htmlFor="modal-password"
+              className="block text-xs font-medium text-slate-700"
             >
               Password (min 6 characters)
             </label>
             <div className="relative mt-1">
               <Lock
-                className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500"
+                className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400"
                 aria-hidden="true"
               />
               <input
-                id="auth-password"
+                id="modal-password"
                 type="password"
                 required
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-xl border border-emerald-900/80 bg-[#07120e] py-2 pl-9 pr-3 text-sm text-slate-100 placeholder-slate-500 focus:border-emerald-400"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:bg-white"
               />
             </div>
           </div>
@@ -197,10 +190,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {(localError || authError) && (
             <div
               role="alert"
-              className="flex items-start gap-2 rounded-xl border border-rose-500/50 bg-rose-950/50 p-3 text-xs text-rose-200"
+              className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800"
             >
               <AlertTriangle
-                className="mt-0.5 h-4 w-4 shrink-0 text-rose-400"
+                className="mt-0.5 h-4 w-4 shrink-0 text-rose-600"
                 aria-hidden="true"
               />
               <span>{localError || authError}</span>
@@ -210,10 +203,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {statusMessage && (
             <div
               role="status"
-              className="flex items-start gap-2 rounded-xl border border-emerald-500/50 bg-emerald-950/50 p-3 text-xs text-emerald-200"
+              className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800"
             >
               <CheckCircle2
-                className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400"
+                className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
                 aria-hidden="true"
               />
               <span>{statusMessage}</span>
@@ -223,14 +216,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="submit"
             disabled={submitting}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
           >
             {submitting && (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             )}
-            <span>
-              {mode === 'signin' ? 'Sign In' : 'Create Private Account'}
-            </span>
+            <span>{mode === 'signin' ? 'Sign In' : 'Create Account'}</span>
           </button>
         </form>
       </div>
