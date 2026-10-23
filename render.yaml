@@ -1,0 +1,25 @@
+# Deploy from repository root, when this project is at the repository root.
+# For an existing repository containing an extra jobguard-ai04/ directory,
+# use manual Render service setup or move this file to the repository root
+# and change rootDir to jobguard-ai04/backend.
+services:
+  - type: web
+    name: jobguard-ai-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: MAX_INPUT_CHARS
+        value: '12000'
+      - key: RATE_LIMIT_PER_MINUTE
+        value: '30'
+      - key: AI_ENABLED
+        value: 'false'
+      # Set to actual Vercel origin after frontend deploy; no trailing slash.
+      - key: CORS_ORIGINS
+        sync: false
